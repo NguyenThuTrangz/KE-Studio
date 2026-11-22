@@ -96,7 +96,7 @@ const scallop = (x, cx, cy, r, n = 16) => { const step = Math.PI * 2 / n, rr = r
 
 /* Công cụ vẽ cho từng mẫu. Kích thước tính trên khung gốc; ảnh thu nhỏ tự co theo. */
 function tools(x, spec, W, H, photos, hi) {
-  const t = THEMES.find(v => v.id === spec.theme) || THEMES[0], F = FONTS[t.font], showText = spec.showText !== false;
+  const t = THEMES.find(v => v.id === spec.theme) || THEMES[0], F = FONTS[spec.font] || FONTS[t.font], showText = spec.showText !== false;
   let slot = 0;
   const up = s => F.upper ? String(s).toUpperCase() : s;
   const g = { W, H, t, a: spec.a, b: spec.b2, c: spec.top, showText, head: false,
@@ -242,7 +242,7 @@ function renderSpec(spec, photos, assets, scale, hi) {
   const t = THEMES.find(v => v.id === spec.theme) || THEMES[0];
   x.fillStyle = t.paper; x.fillRect(0, 0, W, H);
   const g = tools(x, spec, W, H, photos, hi);
-  T.find(v => v.id === spec.layout).draw(g);
+  if (spec.gen) drawGen(g, x, spec); else T.find(v => v.id === spec.layout).draw(g);
   (spec.covers || []).forEach(cv => drawCover(x, cv, W, H));
   drawMarks(x, spec, assets, W, H, g.head);
   return c;
@@ -251,18 +251,33 @@ function renderSpec(spec, photos, assets, scale, hi) {
 /* ---------------- giao diện ---------------- */
 const el = (tag, props = {}, ...kids) => { const e = document.createElement(tag); for (const [k, v] of Object.entries(props)) { if (k === 'style') e.style.cssText = v; else if (k in e) e[k] = v; else e.setAttribute(k, v); } e.append(...kids.filter(k => k !== '' && k != null)); return e; };
 const store = { get(k, d) { try { const v = localStorage.getItem('ke-studio:' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem('ke-studio:' + k, JSON.stringify(v)); } catch (e) {} } };
-const PREF = { format: '1:1', theme: 'ke', logoPos: 'top', logoSize: 27, wa: false, waNumber: '+84 855 555 490', ...store.get('pref', {}) };
-const savePref = () => store.set('pref', { format: PS.format, theme: PS.theme, logoPos: PREF.logoPos, logoSize: PREF.logoSize, wa: PREF.wa, waNumber: PREF.waNumber });
-const PS = { photos: [], assets: null, spec: null, cat: KE, format: PREF.format, theme: PREF.theme };
+const PREF = { format: '1:1', theme: 'ke', logoPos: 'top', logoSize: 27, wa: true, waNumber: '', ...store.get('pref', {}) };
+const savePref = () => store.set('pref', { format: PS.format, theme: PS.theme, season: PS.season, logoPos: PREF.logoPos, logoSize: PREF.logoSize, wa: PREF.wa, waNumber: PREF.waNumber });
+const EXPLORE = '✨ Khám phá';
+const PS = { photos: [], assets: null, spec: null, cat: EXPLORE, format: PREF.format, theme: PREF.theme, season: PREF.season || 'all' };
 const newSpec = id => ({ layout: id, format: PS.format, theme: PS.theme, filter: 'Gốc', b: 0, c: 0, s: 0, w: 0, sh: 0,
   a: id === 'ke-banner' ? 'SWISS DOT FABRIC' : LINES[T.findIndex(v => v.id === id) % LINES.length], b2: SUBS[0], top: TOPS[0], ts: 100, showText: true, main: 0,
   logoPos: PREF.logoPos, logoSize: PREF.logoSize, logoWhite: false, wa: PREF.wa, waNumber: PREF.waNumber, covers: [],
   trans: PS.photos.map(() => ({ zoom: 1, px: 0, py: 0, rot: 0, flip: false })) });
 let view;
+// ô nhập số WhatsApp dùng chung cho thư viện mẫu và trình chỉnh: gõ một lần, mọi mẫu (kể cả khi bấm 🎲) đều in số này
+function waField(onChange) {
+  const num = el('input', { type: 'tel', className: 'txt', value: PREF.waNumber, maxLength: 24, placeholder: 'vd +84 912 345 678', ariaLabel: 'Số WhatsApp của bạn' });
+  const on = el('input', { type: 'checkbox', checked: PREF.wa });
+  let tmr; const apply = () => { PREF.waNumber = num.value.trim(); PREF.wa = on.checked; savePref(); if (PS.spec) { PS.spec.waNumber = PREF.waNumber; PS.spec.wa = PREF.wa; } clearTimeout(tmr); tmr = setTimeout(onChange, 350); };
+  num.oninput = apply; on.onchange = apply;
+  return el('div', { className: 'field waBox' }, el('label', { textContent: 'Số WhatsApp của bạn (in lên ảnh)' }), num,
+    el('div', { className: 'ticks' }, el('label', {}, on, ' In số này lên ảnh')),
+    el('p', { className: 'sub', textContent: 'Mỗi người tự nhập số của mình. App nhớ số trên máy này và giữ nguyên khi đổi mẫu hay bấm 🎲. Để trống thì ảnh không có số.' }));
+}
+const newSeed = () => (Math.random() * 2 ** 31) >>> 0;
+// mẫu sinh: giữ phần người dùng đã chỉnh (ảnh, màu ảnh, logo, che mặt), đổi phần thiết kế
+const newGen = (seed, keep = {}, base = null) => { const g = genSpec(seed, PS.season, PS.format, keep); const b = base || newSpec(T[0].id); return { ...b, ...g, layout: 'gen', format: PS.format, wa: PREF.wa, waNumber: PREF.waNumber }; };
+const userText = (sp, k) => { const all = Object.values(SEASONS).flatMap(S => [...S.heads, ...S.subs, ...S.tops]); return sp && sp[k] && !all.includes(sp[k]) && sp[k] !== 'SWISS DOT FABRIC'; };
 
 async function loadAssets() {
   if (PS.assets) return PS.assets;
-  try { await Promise.all(['800 40px Montserrat', 'italic 600 40px Montserrat', '600 40px "Cormorant Garamond"', 'italic 500 40px "Cormorant Garamond"'].map(f => document.fonts.load(f))); } catch (e) {}
+  try { await Promise.all(['800 40px Montserrat', 'italic 600 40px Montserrat', '600 40px "Cormorant Garamond"', 'italic 500 40px "Cormorant Garamond"', '700 40px "Playfair Display"', '700 40px Quicksand'].map(f => document.fonts.load(f))); } catch (e) {}
   const logo = await loadImage(KE_LOGO);
   PS.assets = { logo, logoWhite: whiteLogo(logo) };
   return PS.assets;
@@ -321,19 +336,47 @@ function nextRandom(current) {
   return randomBag.splice(at, 1)[0];
 }
 function randomize() {
+  if (PS.cat === EXPLORE || PS.spec?.gen) {   // mẫu sinh: vô tận
+    const old = PS.spec, g = newGen(newSeed(), {}, old);
+    if (old) { for (const k of ['a', 'b2', 'top']) if (userText(old, k)) g[k] = old[k]; }
+    PS.spec = g; photos().then(() => { const p = view.querySelector('.previewBox'); if (p) p.scrollIntoView({ block: 'nearest' }); }); return;
+  }
   const old = PS.spec, [layout, theme] = nextRandom(old), fresh = newSpec(layout);
-  PS.spec = old ? { ...old, layout, theme, a: LINES.includes(old.a) || old.a === 'SWISS DOT FABRIC' ? fresh.a : old.a } : { ...fresh, theme };   // giữ chữ người dùng tự gõ
+  PS.spec = old ? { ...old, wa: PREF.wa, waNumber: PREF.waNumber, layout, theme, a: LINES.includes(old.a) || old.a === 'SWISS DOT FABRIC' ? fresh.a : old.a } : { ...fresh, theme };   // giữ chữ người dùng tự gõ
   photos().then(() => { const p = view.querySelector('.previewBox'); if (p) p.scrollIntoView({ block: 'nearest' }); });
 }
 const randomButton = label => { const b = el('button', { type: 'button', className: 'btn', textContent: label }); b.onclick = randomize; return b; };
+const fmtN = n => n.toLocaleString('vi-VN');
+const catChips = () => chips([[EXPLORE, `${EXPLORE} (vô tận)`], ...CATS.map(c => [c, `${c} (${T.filter(t => t.cat === c).length})`])], PS.cat, v => { PS.cat = v; photos(); }, 'Nhóm mẫu');
+// Khám phá: mỗi lần cuộn tới cuối lại sinh thêm mẫu mới, không bao giờ hết
+function explore() {
+  const run = ++thumbRun, grid = el('div', { className: 'tpl' }), more = el('button', { type: 'button', className: 'btn line', style: 'width:100%;margin:14px 0', textContent: 'Xem thêm mẫu' });
+  view.append(el('div', {},
+    waField(() => photos()),
+    el('div', { className: 'bar' }, randomButton('🎲 Ngẫu nhiên')),
+    el('h3', { textContent: `Bước 2: chọn mẫu — hơn ${fmtN(GEN_COUNT)} kiểu kết hợp, cuộn mãi không hết` }),
+    el('p', { className: 'sub', textContent: `${SK_IDS.length} bố cục × ${SHAPES_BOX.length + 2} hình cắt ảnh × ${TEXT_STYLES.length} kiểu chữ × ${DECORS.length} hoạ tiết × ${THEMES.length} bảng màu × 4 font, theo mùa lễ. Bấm vào mẫu để chỉnh; trong lúc chỉnh có nút đổi riêng từng phần.` }),
+    chips(Object.entries(SEASONS).map(([k, v]) => [k, v.name]), PS.season, v => { PS.season = v; savePref(); photos(); }, 'Mùa lễ'),
+    formatChips(PS.format, v => { PS.format = v; savePref(); photos(); }),
+    catChips(), grid, more));
+  const [W] = FORMATS[PS.format], scale = 240 / W, queue = [];
+  const batch = () => { for (let i = 0; i < 18; i++) { const sp = newGen(newSeed()), b = el('button', { type: 'button', className: 'tile', ariaLabel: 'Mẫu ' + SK_NAMES[sp.sk] }); b.onclick = () => { PS.spec = sp; photos(); }; grid.append(b); queue.push([sp, b]); } pump(); };
+  let busy = false;
+  const pump = () => { if (busy) return; busy = true; const step = () => { if (run !== thumbRun || !queue.length) { busy = false; return; } const [sp, b] = queue.shift(); try { b.append(renderSpec(sp, PS.photos, PS.assets, scale, false)); } catch (e) { console.error(sp, e); b.remove(); } setTimeout(step); }; step(); };
+  more.onclick = batch;
+  if ('IntersectionObserver' in window) { const io = new IntersectionObserver(es => { if (run !== thumbRun) { io.disconnect(); return; } if (es.some(e => e.isIntersecting) && queue.length < 6) batch(); }, { rootMargin: '600px' }); io.observe(more); }
+  batch();
+}
 function gallery() {
+  if (PS.cat === EXPLORE) return explore();
   const run = ++thumbRun, grid = el('div', { className: 'tpl' }), ids = T.filter(t => t.cat === PS.cat);
   view.append(el('div', {},
+    waField(() => photos()),
     el('div', { className: 'bar' }, randomButton('🎲 Ngẫu nhiên')),
     el('h3', { textContent: `Bước 2: chọn mẫu (${T.length} bố cục × ${THEMES.length} tông màu = ${T.length * THEMES.length} mẫu)` }),
     formatChips(PS.format, v => { PS.format = v; savePref(); photos(); }),
     themeChips(PS.theme, v => { PS.theme = v; savePref(); photos(); }),
-    chips(CATS.map(c => [c, `${c} (${T.filter(t => t.cat === c).length})`]), PS.cat, v => { PS.cat = v; photos(); }, 'Nhóm mẫu'),
+    catChips(),
     grid));
   const [W] = FORMATS[PS.format], scale = 240 / W, queue = ids.map(t => { const b = el('button', { type: 'button', className: 'tile', ariaLabel: 'Mẫu ' + t.id }); b.onclick = () => { PS.spec = newSpec(t.id); photos(); }; grid.append(b); return [t, b]; });
   const next = () => { if (run !== thumbRun || !queue.length) return; const [t, b] = queue.shift(); try { b.append(renderSpec(newSpec(t.id), PS.photos, PS.assets, scale, false)); } catch (e) { console.error(t.id, e); } setTimeout(next); };
@@ -365,18 +408,16 @@ function editor() {
     const p = el('select', { ariaLabel: 'Chọn câu có sẵn' }, el('option', { value: '', textContent: 'Chọn câu có sẵn...' }), ...list.map(l => el('option', { value: l, textContent: l }))); p.onchange = () => { if (p.value) { i.value = s[key] = p.value; redraw(); } };
     return el('div', { className: 'field' }, el('label', { htmlFor: id, textContent: label }), i, p); };
   const textBox = groupBox('Chữ', true, el('div', { className: 'ticks' }, el('label', {}, show, ' Hiện chữ')),
-    field('lineA', 'Tiêu đề (IN HOA)', 'a', LINES, 60), field('lineB', 'Dòng nghiêng', 'b2', SUBS, 70), s.layout === 'ke-banner' ? field('lineC', 'Dòng nhỏ phía trên', 'top', TOPS, 40) : '',
+    field('lineA', 'Tiêu đề (IN HOA)', 'a', s.gen ? [...new Set([...SEASONS[s.season].heads, ...LINES])] : LINES, 60), field('lineB', 'Dòng nghiêng', 'b2', s.gen ? [...new Set([...SEASONS[s.season].subs, ...SUBS])] : SUBS, 70), s.layout === 'ke-banner' || s.gen ? field('lineC', 'Dòng nhỏ phía trên (một số mẫu)', 'top', s.gen ? SEASONS[s.season].tops : TOPS, 40) : '',
     slider('Cỡ chữ', 60, 140, s.ts, v => { s.ts = v; redraw(); }), el('p', { className: 'sub', textContent: 'Chỉ ghi điều có thật. MOQ là 15 chiếc/mẫu. Không tự thêm giá hay cam kết.' }));
   const look = groupBox('Khổ và tông màu', false, formatChips(s.format, v => { s.format = v; PS.format = v; savePref(); photos(); }), themeChips(s.theme, v => { s.theme = v; PS.theme = v; savePref(); photos(); }));
   const lw = el('input', { type: 'checkbox', checked: s.logoWhite }); lw.onchange = () => { s.logoWhite = lw.checked; redraw(); };
-  const wa = el('input', { type: 'checkbox', checked: s.wa }); wa.onchange = () => { s.wa = PREF.wa = wa.checked; savePref(); redraw(); };
-  const waNum = el('input', { type: 'text', className: 'txt', value: s.waNumber, maxLength: 24, ariaLabel: 'Số WhatsApp' }); waNum.oninput = () => { s.waNumber = PREF.waNumber = waNum.value.trim(); savePref(); redraw(); };
   const logoBox = groupBox('Logo và WhatsApp', false,
     chips([['top', 'Giữa trên (như kho KE)'], ['tl', 'Góc trái trên'], ['br', 'Góc phải dưới']], s.logoPos, v => { s.logoPos = PREF.logoPos = v; savePref(); photos(); }, 'Vị trí logo'),
     slider('Cỡ logo (% bề ngang)', 18, 40, s.logoSize, v => { s.logoSize = PREF.logoSize = v; savePref(); redraw(); }),
     el('div', { className: 'ticks' }, el('label', {}, lw, ' Logo trắng (ảnh tối)')),
-    el('div', { className: 'ticks' }, el('label', {}, wa, ' Thêm số WhatsApp')), waNum,
-    el('p', { className: 'sub', textContent: 'Logo luôn có trên ảnh. Số WhatsApp chung của team là +84 855 555 490; đổi số phải hỏi người phụ trách.' }));
+    waField(() => redraw()),
+    el('p', { className: 'sub', textContent: 'Logo luôn có trên ảnh, không tắt được.' }));
   let coverMode = s.covers.length > 0;
   const coverInfo = el('p', { className: 'sub' });
   const coverSize = slider('Cỡ miếng che', 3, 20, s.covers.at(-1)?.r ?? 8, v => { const cv = s.covers.at(-1); if (cv) { cv.r = v; redraw(); } });
@@ -385,10 +426,24 @@ function editor() {
       btn('Bỏ miếng cuối', () => { s.covers.pop(); coverMode = s.covers.length > 0; redraw(); coverInfo.textContent = ''; }),
       btn('Kéo ảnh / kéo miếng che', () => { coverMode = !coverMode && s.covers.length > 0; coverInfo.textContent = coverMode ? 'Kéo trên ảnh để dời miếng che.' : 'Kéo trên ảnh để dời ảnh.'; })),
     coverSize, coverInfo);
+  let genBox = '';
+  if (s.gen) {
+    const FONT_NAMES = { social: 'Montserrat (KE)', lux: 'Cormorant sang', editorial: 'Playfair tạp chí', soft: 'Quicksand mềm' };
+    const AX = [['sk', 'Bố cục', SK_IDS, SK_NAMES], ['shape', 'Hình cắt ảnh', [...new Set([...SHAPES_BOX, ...SHAPES_SQ])], { rect: 'Vuông góc', round: 'Bo nhẹ', soft: 'Bo tròn', arch: 'Vòm', scallop: 'Vỏ sò', stamp: 'Tem thư', circle: 'Tròn', heart: 'Trái tim', oval: 'Bầu dục' }],
+      ['tstyle', 'Kiểu chữ', TEXT_STYLES, TS_NAMES], ['decor', 'Hoạ tiết', DECORS, DC_NAMES], ['theme', 'Bảng màu', THEMES.map(t => t.id), Object.fromEntries(THEMES.map(t => [t.id, t.name]))],
+      ['font', 'Font', ['social', 'lux', 'editorial', 'soft'], FONT_NAMES], ['motif', 'Hình nhỏ', Object.keys(MOTIF), { heart: 'Tim', dot: 'Chấm', flower: 'Hoa', bow: 'Nơ', shamrock: 'Cỏ 3 lá', egg: 'Trứng', bunny: 'Thỏ', sun: 'Mặt trời', pumpkin: 'Bí ngô', star: 'Sao', snow: 'Bông tuyết' }]];
+    const rows = AX.map(([k, label, list, names]) => { const b = el('button', { type: 'button', className: 'btn line', textContent: `${label}: ${names[s[k]] || s[k]} ↻` });
+      b.onclick = () => { const others = list.filter(v => v !== s[k]); s[k] = others[Math.floor(Math.random() * others.length)];
+        if (k === 'sk' && SKELETONS[s.sk](1080, 1080, 'rect', () => .5).full && PAPER_DECOR.has(s.decor)) s.decor = 'stitch';
+        b.textContent = `${label}: ${names[s[k]] || s[k]} ↻`; redraw(); }; return b; });
+    const season = el('select', { ariaLabel: 'Mùa lễ' }, ...Object.entries(SEASONS).map(([k, v]) => el('option', { value: k, textContent: 'Mùa: ' + v.name }))); season.value = s.season;
+    season.onchange = () => { PS.season = s.season = season.value; savePref(); const g = genSpec(s.seed, s.season, s.format, { sk: s.sk, shape: s.shape, tstyle: s.tstyle, decor: s.decor, font: s.font }); Object.assign(s, { theme: g.theme, motif: g.motif }); for (const k of ['a', 'b2', 'top']) if (!userText(s, k)) s[k] = g[k]; photos(); };
+    genBox = groupBox('Đổi từng phần của mẫu', true, el('p', { className: 'sub', textContent: 'Mỗi nút đổi riêng một phần, phần khác giữ nguyên. Bấm 🎲 để đổi cả mẫu.' }), season, el('div', { className: 'bar' }, ...rows));
+  }
   const save = el('button', { type: 'button', className: 'btn', textContent: 'Tải ảnh này' }); save.onclick = () => exportMany([s], out);
   const all = PS.photos.length > 1 ? btn(`Áp dụng cho cả ${PS.photos.length} ảnh`, () => exportMany(PS.photos.map((_, i) => ({ ...s, main: i, covers: i === s.main ? s.covers : [] })), out)) : '';
   view.append(el('div', { className: 'bar' }, btn('← Chọn mẫu khác', () => { PS.spec = null; photos(); })), el('div', { className: 'previewBox' }, preview),
-    el('div', { className: 'bar', style: 'margin-top:12px' }, randomButton('🎲 Mẫu khác'), save, all), out, textBox, imgBox, coverBox, logoBox, colorBox, look);
+    el('div', { className: 'bar', style: 'margin-top:12px' }, randomButton('🎲 Mẫu khác'), save, all), out, genBox, textBox, imgBox, coverBox, logoBox, colorBox, look);
   draw();
 }
 async function exportMany(specs, out) {

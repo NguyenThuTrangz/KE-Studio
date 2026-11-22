@@ -46,3 +46,11 @@ Tiêu đề: NEW UPDATE · 100% HAND SMOCKING · HAND SMOCKING & EMBROIDERY · F
 Dòng phụ: You dream it - We smock it · For Smocked Clothing · Stitching sustainability into every thread · Worldwide shipping via FedEx/UPS · k-embroidery.com
 
 MOQ luôn là **15 chiếc/mẫu** (website ghi 30 là chưa cập nhật). Không tự thêm giá hay cam kết.
+
+## 6. Mở rộng cho bộ sinh mẫu (thêm 22/11/2026)
+
+- **Mùa lễ** theo lịch collection của khách (thông tin từ Sale): Valentine, St. Patrick, Easter, Mother's Day, mùa hè, Halloween, Giáng sinh.
+- **Bảng màu mùa**: nền pastel theo màu vải sản phẩm (vàng bơ `#FFF6D6`, xanh phấn `#E3EEF8`, đào `#FCE6D8`, lavender `#EDE6F6`, bạc hà `#E3F1E1`, hồng đất `#F6DADF`, Valentine `#FBE3E6`, Halloween `#FBF1E4`, đỏ Noel `#B8383A`). Chữ vẫn dùng xanh dương/navy/xanh lá/vàng của KE ở mục 2. Logo không bao giờ đổi màu.
+- **Font thêm**: Playfair Display (tiêu đề kiểu tạp chí), Quicksand (chữ tròn mềm cho hàng trẻ em). Montserrat vẫn là font chính, xuất hiện nhiều nhất.
+- **Hoạ tiết may thêu**: đường smock zigzag có chấm, viền chỉ khâu nét đứt, viền vỏ sò, ric-rac, ren chấm, chấm Swiss dot, kẻ ô gingham, sọc, nơ.
+- **Câu theo mùa** (đúng sự thật, không giá, không cam kết): VALENTINE COLLECTION, SMOCKED WITH LOVE, ST. PATRICK'S DAY COLLECTION, EASTER COLLECTION, BUNNIES & BLOOMS, MOTHER'S DAY COLLECTION, SUMMER COLLECTION, HALLOWEEN COLLECTION, CHRISTMAS COLLECTION, HOLIDAY SMOCKED STYLES; dòng phụ: Plan your … collection early, Hand smocked with love, Stitched by hand, made with love…
