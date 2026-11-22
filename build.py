@@ -19,7 +19,9 @@ def main():
     DIST.mkdir(exist_ok=True)
     out = DIST / "KE-Studio.html"
     out.write_text(html, encoding="utf-8", newline="\n")
-    print(out.name, round(out.stat().st_size / 1024), "KB")
+    # bản cho GitHub Pages: link web mở thẳng app
+    (ROOT / "index.html").write_text(html, encoding="utf-8", newline="\n")
+    print(out.name, "+ index.html", round(out.stat().st_size / 1024), "KB")
 
 
 if __name__ == "__main__":
