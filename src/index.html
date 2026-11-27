@@ -59,6 +59,14 @@ h3 { font:600 22px/1.2 "Cormorant Garamond", Georgia, serif; color:var(--navy); 
 .range .val { text-align:right; color:var(--muted); font-size:13px; }
 .ticks label { display:flex; align-items:center; gap:6px; margin:8px 0; }
 .ticks input { accent-color:var(--green); width:18px; height:18px; }
+#toast { position:fixed; left:50%; bottom:24px; transform:translate(-50%,20px); background:#1B2A4A; color:#fff; padding:10px 16px; border-radius:10px; font-size:14px; opacity:0; pointer-events:none; transition:.2s; z-index:80; max-width:90vw; }
+#toast.on { opacity:1; transform:translate(-50%,0); }
+table.keys { width:100%; border-collapse:collapse; margin:8px 0; font-size:14px; } table.keys td { padding:6px 4px; border-bottom:1px solid #eee; vertical-align:top; } kbd { background:#F4EEE4; border:1px solid #ddd; border-bottom-width:2px; border-radius:5px; padding:2px 6px; font:600 12px/1.6 ui-monospace,monospace; white-space:nowrap; }
+.fxModal { position:fixed; inset:0; z-index:50; background:rgba(20,32,58,.55); display:flex; align-items:flex-start; justify-content:center; overflow:auto; padding:16px; }
+.fxBody { background:var(--white); border-radius:14px; padding:14px; width:min(1100px,100%); display:grid; grid-template-columns:1.2fr 1fr; gap:16px; }
+.fxLeft { text-align:center; } .fxCanvas { max-width:100%; max-height:78vh; touch-action:none; cursor:crosshair; border-radius:8px; border:1px solid var(--line); }
+.fxRight h3 { margin-top:0; }
+@media (max-width:800px) { .fxBody { grid-template-columns:1fr; } .fxCanvas { max-height:55vh; } }
 .waBox { background:var(--white); border:1px solid var(--line); border-radius:12px; padding:10px 14px; }
 .waBox .txt { max-width:320px; }
 .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); gap:12px; }
@@ -76,6 +84,8 @@ footer { text-align:center; color:var(--muted); font-size:12px; padding:20px 16p
 const KE_LOGO = "/*__LOGO__*/";
 /*__STUDIO__*/
 /*__GEN__*/
+/*__FABRIC__*/
+/*__KEYS__*/
 </script>
 </body>
 </html>

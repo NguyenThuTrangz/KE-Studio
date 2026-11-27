@@ -312,6 +312,7 @@ const themeChips = (cur, pick) => chips(THEMES.map(t => [t.id, t.name, t.paper =
 const formatChips = (cur, pick) => chips(Object.keys(FORMATS).map(k => [k, k === '4:5' ? '4:5 Dọc' : k === '1:1' ? '1:1 Vuông' : '9:16 Story']), cur, pick, 'Khổ ảnh');
 
 async function photos() {
+  histSoon();
   const input = el('input', { type: 'file', id: 'files', multiple: true, accept: 'image/*,.heic,.heif' }), msg = el('div');
   input.onchange = async () => {
     const list = [...input.files]; if (!list.length) return;
@@ -385,7 +386,7 @@ function gallery() {
 function editor() {
   thumbRun++;
   const s = PS.spec, preview = el('canvas', { className: 'preview' }), out = el('div');
-  const draw = () => { const c = renderSpec(s, PS.photos, PS.assets, .5, false); preview.width = c.width; preview.height = c.height; preview.getContext('2d').drawImage(c, 0, 0); };
+  const draw = () => { histSoon(); const c = renderSpec(s, PS.photos, PS.assets, .5, false); preview.width = c.width; preview.height = c.height; preview.getContext('2d').drawImage(c, 0, 0); };
   let timer; const redraw = () => { clearTimeout(timer); timer = setTimeout(draw, 40); };
   const tr = () => s.trans[s.main];
   // kéo trên ảnh: dời ảnh, hoặc dời miếng che mặt nếu đang ở chế độ che mặt
@@ -398,7 +399,7 @@ function editor() {
   const main = PS.photos.length > 1 ? el('div', { className: 'field' }, chips(PS.photos.map((_, i) => [i, 'Ảnh ' + (i + 1)]), s.main, v => { s.main = v; photos(); }, 'Ảnh chính')) : '';
   const btn = (t, f, cls = 'btn line') => { const b = el('button', { type: 'button', className: cls, textContent: t }); b.onclick = f; return b; };
   const imgBox = groupBox('Cắt, xoay, lật', true, main, slider('Phóng to', 100, 300, Math.round(tr().zoom * 100), v => { tr().zoom = v / 100; redraw(); }), el('p', { className: 'sub', textContent: 'Kéo trực tiếp trên ảnh để đổi vị trí.' }),
-    el('div', { className: 'bar' }, btn('Xoay 90°', () => { tr().rot = (tr().rot + 90) % 360; redraw(); }), btn('Lật ngang', () => { tr().flip = !tr().flip; redraw(); }), btn('Đặt lại', () => { Object.assign(tr(), { zoom: 1, px: 0, py: 0, rot: 0, flip: false }); photos(); })));
+    el('div', { className: 'bar' }, btn('🧵 Thay vải (giữ nếp gấp)', () => fabricEditor(s.main, () => photos()), 'btn'), btn('Xoay 90°', () => { tr().rot = (tr().rot + 90) % 360; redraw(); }), btn('Lật ngang', () => { tr().flip = !tr().flip; redraw(); }), btn('Đặt lại', () => { Object.assign(tr(), { zoom: 1, px: 0, py: 0, rot: 0, flip: false }); photos(); })));
   const filter = el('select', { id: 'filter' }, ...Object.keys(FILTERS).map(f => el('option', { value: f, textContent: f }))); filter.value = s.filter; filter.onchange = () => { s.filter = filter.value; redraw(); };
   const colorBox = groupBox('Màu và ánh sáng', false, el('div', { className: 'field' }, el('label', { htmlFor: 'filter', textContent: 'Bộ lọc' }), filter),
     ...[['Độ sáng', 'b'], ['Tương phản', 'c'], ['Bão hoà', 's'], ['Ấm lạnh', 'w']].map(([t, k]) => slider(t, -50, 50, s[k], v => { s[k] = v; redraw(); })), slider('Độ nét', 0, 100, s.sh, v => { s.sh = v; redraw(); }),
@@ -443,7 +444,7 @@ function editor() {
   const save = el('button', { type: 'button', className: 'btn', textContent: 'Tải ảnh này' }); save.onclick = () => exportMany([s], out);
   const all = PS.photos.length > 1 ? btn(`Áp dụng cho cả ${PS.photos.length} ảnh`, () => exportMany(PS.photos.map((_, i) => ({ ...s, main: i, covers: i === s.main ? s.covers : [] })), out)) : '';
   view.append(el('div', { className: 'bar' }, btn('← Chọn mẫu khác', () => { PS.spec = null; photos(); })), el('div', { className: 'previewBox' }, preview),
-    el('div', { className: 'bar', style: 'margin-top:12px' }, randomButton('🎲 Mẫu khác'), save, all), out, genBox, textBox, imgBox, coverBox, logoBox, colorBox, look);
+    el('div', { className: 'bar', style: 'margin-top:12px' }, randomButton('🎲 Mẫu khác'), save, all, btn('⌨ Phím tắt', showKeys)), out, genBox, textBox, imgBox, coverBox, logoBox, colorBox, look);
   draw();
 }
 async function exportMany(specs, out) {

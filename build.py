@@ -13,10 +13,12 @@ def main():
     html = (ROOT / "src" / "index.html").read_text(encoding="utf-8")
     js = (ROOT / "src" / "studio.js").read_text(encoding="utf-8")
     gen = (ROOT / "src" / "gen.js").read_text(encoding="utf-8")
+    fabric = (ROOT / "src" / "fabric.js").read_text(encoding="utf-8")
+    keys = (ROOT / "src" / "keys.js").read_text(encoding="utf-8")
     for m in ("/*__LOGO__*/", "/*__ICON__*/", "/*__STUDIO__*/"):
         assert m in html, m
-    assert "</script" not in (js + gen).lower(), "mã không được chứa thẻ </script>"
-    html = html.replace("/*__STUDIO__*/", js).replace("/*__GEN__*/", gen).replace("/*__LOGO__*/", logo).replace("/*__ICON__*/", icon)
+    assert "</script" not in (js + gen + fabric + keys).lower(), "mã không được chứa thẻ </script>"
+    html = html.replace("/*__STUDIO__*/", js).replace("/*__GEN__*/", gen).replace("/*__FABRIC__*/", fabric).replace("/*__KEYS__*/", keys).replace("/*__LOGO__*/", logo).replace("/*__ICON__*/", icon)
     DIST.mkdir(exist_ok=True)
     out = DIST / "KE-Studio.html"
     out.write_text(html, encoding="utf-8", newline="\n")
