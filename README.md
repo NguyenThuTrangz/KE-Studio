@@ -29,6 +29,28 @@ Mở file **`dist/KE-Studio.html`** bằng Chrome, Edge hoặc Safari. Không c�
 
 Trên điện thoại: mở file rồi *Thêm vào màn hình chính*. Không tải được thì nhấn giữ ảnh, chọn *Lưu ảnh*.
 
+## Thay vải giữ nếp gấp
+
+Trong trình chỉnh, mục *Cắt, xoay, lật* → **🧵 Thay vải (giữ nếp gấp)**: chọn vùng bộ đồ bằng đũa thần / cọ, chọn ảnh vải phẳng hoặc một màu, chỉnh độ đậm nếp, độ cong hoạ tiết, độ bóng, rồi **Áp dụng vào ảnh** (Ctrl+Z để hoàn tác). Chỉ thay mặt vải, không đổi dáng bộ đồ; ảnh thay vải là ảnh minh hoạ, kiểm trước khi đăng.
+
+## Phím tắt
+
+Bấm **⌨ Phím tắt** trong trình chỉnh (hoặc F1, `?`) để xem bảng đầy đủ. Trên Mac dùng ⌘ thay cho Ctrl.
+
+| Phím | Việc |
+|---|---|
+| Ctrl+Z / Ctrl+Y (Ctrl+Shift+Z) | Hoàn tác / làm lại (đổi mẫu, chữ, màu, cắt ảnh, thay vải…) |
+| Ctrl+S | Tải ngay ảnh đang chỉnh (JPG 1920 px) |
+| Ctrl+C | Chép ảnh đang chỉnh, dán thẳng vào Zalo, Messenger, Word |
+| Ctrl+X | Cắt ảnh gốc đang chọn khỏi danh sách (đã chép sẵn) |
+| Ctrl+V | Dán ảnh vừa chép / ảnh chụp màn hình vào danh sách |
+| Ctrl+O | Chọn ảnh từ máy |
+| Mũi tên, + / − | Dời ảnh (Shift: nhanh), phóng to / thu nhỏ |
+| R · Delete · Esc | Mẫu ngẫu nhiên · bỏ miếng che mặt cuối · quay lại / đóng |
+| Trong Thay vải | Ctrl+Z/Y vùng chọn, Ctrl+A chọn hết, W đũa thần, B cọ, Ctrl+V dán ảnh vải, Ctrl+Enter áp dụng, Esc huỷ |
+
+Đang gõ trong ô chữ thì Ctrl+Z/X/C/V là của ô chữ.
+
 ## Quy tắc
 
 - Logo KE luôn có trên ảnh xuất ra, không tắt được.
